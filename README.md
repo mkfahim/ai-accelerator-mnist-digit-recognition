@@ -3,4 +3,5 @@
 2. AXi-4 Protocol for data transfer is employed.
 3. Taped out the semicustom design from Efabless with OpenLane.
 4. The design has been validaed on Zedboad.
+
 Feel free to reach out if you have any question at mdomorfaruque007@gmail.com
