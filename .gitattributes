@@ -1,3 +1,4 @@
+# Large binary/design files → LFS
 *.def filter=lfs diff=lfs merge=lfs -text
 *.odb filter=lfs diff=lfs merge=lfs -text
 *.sdc filter=lfs diff=lfs merge=lfs -text
@@ -7,5 +8,12 @@
 *.sdf filter=lfs diff=lfs merge=lfs -text
 *.spef filter=lfs diff=lfs merge=lfs -text
 *.spice filter=lfs diff=lfs merge=lfs -text
-*.v filter=lfs diff=lfs merge=lfs -text
 *.lib filter=lfs diff=lfs merge=lfs -text
+
+# Verilog files → normal text, auto line endings
+*.v text=auto
+
+# Optional: C/C++ or scripts → auto line endings
+*.c text=auto
+*.h text=auto
+*.py text=auto
