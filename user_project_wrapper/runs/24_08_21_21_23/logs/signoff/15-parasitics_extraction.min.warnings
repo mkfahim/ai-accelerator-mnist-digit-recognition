@@ -1,7 +1,0 @@
-[WARNING ODB-0220] WARNING (LEFPARS-2036): SOURCE statement is obsolete in version 5.6 and later.
-To avoid this warning in the future, remove this statement from the LEF file with version 5.6 or later. See file /home/engtech/Desktop/Openlane_v2/HW_For_AI/openlane/user_project_wrapper/runs/24_08_21_21_23/tmp/merged.min.lef at line 68353.
-[WARNING RCX-0111] Net 37 io_in[16] has a loop at x=2558980 y=2040340 , on iterm 4 mprj/io_in[11].
-[WARNING RCX-0111] Net 38 io_in[17] has a loop at x=2558980 y=2215780 , on iterm 5 mprj/io_in[12].
-[WARNING RCX-0111] Net 39 io_in[18] has a loop at x=2558980 y=2391220 , on iterm 6 mprj/io_in[13].
-[WARNING RCX-0111] Net 42 io_in[20] has a loop at x=2558980 y=2742100 , on iterm 8 mprj/io_in[15].
-[WARNING] Did not save OpenROAD database!
