@@ -1,9 +1,0 @@
-CARAVEL_ROOT: /home/engtech/Desktop/Openlane_v2/HW_For_AI/caravel
-MCW_ROOT: /home/engtech/Desktop/Openlane_v2/HW_For_AI/mgmt_core_wrapper
-PDK: sky130A
-PDK_ROOT: /home/engtech/Desktop/Openlane_v2/HW_For_AI/dependencies/pdks
-USER_PROJECT_ROOT: /home/engtech/Desktop/Openlane_v2/HW_For_AI
-caravan: false
-clk: 25
-emailto:
-- null
