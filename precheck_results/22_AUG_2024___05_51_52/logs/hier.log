@@ -1,9 +1,0 @@
-BEGIN: Thu 22 Aug 2024 08:13:21 AM UTC
-Creating /home/engtech/Desktop/Openlane_v2/HW_For_AI/precheck_results/22_AUG_2024___05_51_52/tmp/verilog.cells from the following files...
-	/home/engtech/Desktop/Openlane_v2/HW_For_AI/verilog/gl/user_proj_example.v
-	/home/engtech/Desktop/Openlane_v2/HW_For_AI/verilog/gl/user_project_wrapper.v
-[INFO] Changing from /home/engtech/Desktop/Openlane_v2/HW_For_AI/gds/user_project_wrapper.gds
-	to /home/engtech/Desktop/Openlane_v2/HW_For_AI/precheck_results/22_AUG_2024___05_51_52/tmp/layout.txt
-Hierarchy check for user_project_wrapper passed.
-END: Thu 22 Aug 2024 08:13:38 AM UTC
-Runtime: 0:00:17 (hh:mm:ss)
