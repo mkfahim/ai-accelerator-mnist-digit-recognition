@@ -1,3 +1,20 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ac3ad0daebeb5d07efc406789d3187062dfac2948d7427d318db35173d2f1651
-size 526
+`define pretrained
+`define numLayers 5
+`define dataWidth 16
+`define numNeuronLayer1 30
+`define numWeightLayer1 784
+`define Layer1ActType "relu"
+`define numNeuronLayer2 30
+`define numWeightLayer2 30
+`define Layer2ActType "relu"
+`define numNeuronLayer3 10
+`define numWeightLayer3 30
+`define Layer3ActType "relu"
+`define numNeuronLayer4 10
+`define numWeightLayer4 10
+`define Layer4ActType "relu"
+`define numNeuronLayer5 10
+`define numWeightLayer5 10
+`define Layer5ActType "hardmax"
+`define sigmoidSize 5
+`define weightIntWidth 4

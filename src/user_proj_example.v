@@ -1,3 +1,399 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7f19d5e1dc6145c9ab5af3960163db41ce58ab12b45ff835f228ee2a0011f588
-size 10331
+`default_nettype none
+//`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 07.04.2019 20:57:54
+// Design Name: 
+// Module Name: top_layer
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`include "include.v"
+
+module user_proj_example #(
+    parameter integer C_S_AXI_DATA_WIDTH    = 16,
+    parameter integer C_S_AXI_ADDR_WIDTH    = 5
+)
+(
+`ifdef USE_POWER_PINS
+    inout vccd1,	// User area 1 1.8V supply  
+    inout vssd1,	// User area 1 digital ground  
+`endif  
+    //Clock and Reset
+    input                     wire              clk,
+    input                    wire               wb_rst_i,
+    //AXI Stream interface
+    input  wire [`dataWidth:0]                  io_in,
+   // input      wire                             axis_in_data_valid,
+    output reg    [3:0]                         io_out,
+    output wire                                 io_out1,
+    output wire   [4:0]                         io_oeb
+    
+   
+    
+    //Interrupt interface
+   // output wire                             intr
+);
+assign io_oeb = 5'b00000;
+
+wire [15:0]  config_layer_num;
+wire [15:0]  config_neuron_num;
+wire [15:0] weightValue;
+wire [15:0] biasValue;
+wire [15:0] out;
+wire out_valid;
+wire weightValid;
+wire biasValid;
+//wire axi_rd_en;
+wire [15:0] axi_rd_data;
+
+
+assign io_out1 = out_valid;
+//assign axis_in_data_ready = 1'b1;
+//testing assignment
+//assign weightValue1=weightValue;
+reg [15:0]	weightReg;
+reg [C_S_AXI_DATA_WIDTH-1:0]	biasReg;
+reg [C_S_AXI_DATA_WIDTH-1:0]	outputReg;
+reg [C_S_AXI_DATA_WIDTH-1:0]	layerReg;
+reg [C_S_AXI_DATA_WIDTH-1:0]	neuronReg;
+reg weightValidReg;
+reg biasValidReg;
+
+assign config_layer_num = layerReg;
+assign config_neuron_num = neuronReg;
+assign weightValue = weightReg;
+assign biasValue = biasReg;
+assign weightValid=weightValidReg;
+assign biasValid=biasValidReg;
+
+
+
+
+
+localparam IDLE = 'd0,
+           SEND = 'd1;
+wire [`numNeuronLayer1-1:0] o1_valid;
+wire [`numNeuronLayer1*`dataWidth-1:0] x1_out;
+reg [`numNeuronLayer1*`dataWidth-1:0] holdData_1;
+reg [`dataWidth-1:0] out_data_1;
+reg data_out_valid_1;
+
+
+
+always @( posedge  clk )
+	begin
+	if (  wb_rst_i == 1'b1 )
+		begin
+		weightReg <= 0;
+		biasReg <= 0;
+		layerReg <= 0;
+		neuronReg <= 0;
+		
+		weightValidReg <= 1'b0;
+		biasValidReg <= 1'b0;
+		
+	end
+end 
+
+Layer_1 #(.NN(`numNeuronLayer1),.numWeight(`numWeightLayer1),.dataWidth(`dataWidth),.layerNum(1),.sigmoidSize(`sigmoidSize),.weightIntWidth(`weightIntWidth),.actType(`Layer1ActType)) l1(
+	.clk(clk),
+	.rst(wb_rst_i),
+	.weightValid(weightValid),
+	.biasValid(biasValid),
+	.weightValue(weightValue),
+	.biasValue(biasValue),
+	.config_layer_num(config_layer_num),
+	.config_neuron_num(config_neuron_num),
+	.x_valid(io_in[0]),
+	.x_in(io_in[1:16]),
+	.o_valid(o1_valid),
+	.x_out(x1_out)
+);
+
+//State machine for data pipelining
+
+reg       state_1;
+integer   count_1;
+always @(posedge clk)
+begin
+    if(wb_rst_i)
+    begin
+        state_1 <= IDLE;
+        count_1 <= 0;
+        data_out_valid_1 <=0;
+    end
+    else
+    begin
+        case(state_1)
+            IDLE: begin
+                count_1 <= 0;
+                data_out_valid_1 <=0;
+                if (o1_valid[0] == 1'b1)
+                begin
+                    holdData_1 <= x1_out;
+                    state_1 <= SEND;
+                end
+            end
+            SEND: begin
+                out_data_1 <= holdData_1[`dataWidth-1:0];
+                holdData_1 <= holdData_1>>`dataWidth;
+                count_1 <= count_1 +1;
+                data_out_valid_1 <= 1;
+                if (count_1 == `numNeuronLayer1)
+                begin
+                    state_1 <= IDLE;
+                    data_out_valid_1 <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+wire [`numNeuronLayer2-1:0] o2_valid;
+wire [`numNeuronLayer2*`dataWidth-1:0] x2_out;
+reg [`numNeuronLayer2*`dataWidth-1:0] holdData_2;
+reg [`dataWidth-1:0] out_data_2;
+reg data_out_valid_2;
+
+Layer_2 #(.NN(`numNeuronLayer2),.numWeight(`numWeightLayer2),.dataWidth(`dataWidth),.layerNum(2),.sigmoidSize(`sigmoidSize),.weightIntWidth(`weightIntWidth),.actType(`Layer2ActType)) l2(
+	.clk(clk),
+	.rst(wb_rst_i),
+	.weightValid(weightValid),
+	.biasValid(biasValid),
+	.weightValue(weightValue),
+	.biasValue(biasValue),
+	.config_layer_num(config_layer_num),
+	.config_neuron_num(config_neuron_num),
+	.x_valid(data_out_valid_1),
+	.x_in(out_data_1),
+	.o_valid(o2_valid),
+	.x_out(x2_out)
+);
+
+//State machine for data pipelining
+
+reg       state_2;
+integer   count_2;
+always @(posedge clk)
+begin
+    if(wb_rst_i)
+    begin
+        state_2 <= IDLE;
+        count_2 <= 0;
+        data_out_valid_2 <=0;
+    end
+    else
+    begin
+        case(state_2)
+            IDLE: begin
+                count_2 <= 0;
+                data_out_valid_2 <=0;
+                if (o2_valid[0] == 1'b1)
+                begin
+                    holdData_2 <= x2_out;
+                    state_2 <= SEND;
+                end
+            end
+            SEND: begin
+                out_data_2 <= holdData_2[`dataWidth-1:0];
+                holdData_2 <= holdData_2>>`dataWidth;
+                count_2 <= count_2 +1;
+                data_out_valid_2 <= 1;
+                if (count_2 == `numNeuronLayer2)
+                begin
+                    state_2 <= IDLE;
+                    data_out_valid_2 <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+wire [`numNeuronLayer3-1:0] o3_valid;
+wire [`numNeuronLayer3*`dataWidth-1:0] x3_out;
+reg [`numNeuronLayer3*`dataWidth-1:0] holdData_3;
+reg [`dataWidth-1:0] out_data_3;
+reg data_out_valid_3;
+
+Layer_3 #(.NN(`numNeuronLayer3),.numWeight(`numWeightLayer3),.dataWidth(`dataWidth),.layerNum(3),.sigmoidSize(`sigmoidSize),.weightIntWidth(`weightIntWidth),.actType(`Layer3ActType)) l3(
+	.clk(clk),
+	.rst(wb_rst_i),
+	.weightValid(weightValid),
+	.biasValid(biasValid),
+	.weightValue(weightValue),
+	.biasValue(biasValue),
+	.config_layer_num(config_layer_num),
+	.config_neuron_num(config_neuron_num),
+	.x_valid(data_out_valid_2),
+	.x_in(out_data_2),
+	.o_valid(o3_valid),
+	.x_out(x3_out)
+);
+
+//State machine for data pipelining
+
+reg       state_3;
+integer   count_3;
+always @(posedge clk)
+begin
+    if(wb_rst_i)
+    begin
+        state_3 <= IDLE;
+        count_3 <= 0;
+        data_out_valid_3 <=0;
+    end
+    else
+    begin
+        case(state_3)
+            IDLE: begin
+                count_3 <= 0;
+                data_out_valid_3 <=0;
+                if (o3_valid[0] == 1'b1)
+                begin
+                    holdData_3 <= x3_out;
+                    state_3 <= SEND;
+                end
+            end
+            SEND: begin
+                out_data_3 <= holdData_3[`dataWidth-1:0];
+                holdData_3 <= holdData_3>>`dataWidth;
+                count_3 <= count_3 +1;
+                data_out_valid_3 <= 1;
+                if (count_3 == `numNeuronLayer3)
+                begin
+                    state_3 <= IDLE;
+                    data_out_valid_3 <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+wire [`numNeuronLayer4-1:0] o4_valid;
+wire [`numNeuronLayer4*`dataWidth-1:0] x4_out;
+reg [`numNeuronLayer4*`dataWidth-1:0] holdData_4;
+reg [`dataWidth-1:0] out_data_4;
+reg data_out_valid_4;
+
+Layer_4 #(.NN(`numNeuronLayer4),.numWeight(`numWeightLayer4),.dataWidth(`dataWidth),.layerNum(4),.sigmoidSize(`sigmoidSize),.weightIntWidth(`weightIntWidth),.actType(`Layer4ActType)) l4(
+	.clk(clk),
+	.rst(wb_rst_i),
+	.weightValid(weightValid),
+	.biasValid(biasValid),
+	.weightValue(weightValue),
+	.biasValue(biasValue),
+	.config_layer_num(config_layer_num),
+	.config_neuron_num(config_neuron_num),
+	.x_valid(data_out_valid_3),
+	.x_in(out_data_3),
+	.o_valid(o4_valid),
+	.x_out(x4_out)
+);
+
+//State machine for data pipelining
+
+reg       state_4;
+integer   count_4;
+always @(posedge clk)
+begin
+    if(wb_rst_i)
+    begin
+        state_4 <= IDLE;
+        count_4 <= 0;
+        data_out_valid_4 <=0;
+    end
+    else
+    begin
+        case(state_4)
+            IDLE: begin
+                count_4 <= 0;
+                data_out_valid_4 <=0;
+                if (o4_valid[0] == 1'b1)
+                begin
+                    holdData_4 <= x4_out;
+                    state_4 <= SEND;
+                end
+            end
+            SEND: begin
+                out_data_4 <= holdData_4[`dataWidth-1:0];
+                holdData_4 <= holdData_4>>`dataWidth;
+                count_4 <= count_4 +1;
+                data_out_valid_4 <= 1;
+                if (count_4 == `numNeuronLayer4)
+                begin
+                    state_4 <= IDLE;
+                    data_out_valid_4 <= 0;
+                end
+            end
+        endcase
+    end
+end
+
+reg [`numNeuronLayer4*`dataWidth-1:0] holdData_5;
+assign axi_rd_data = holdData_5[`dataWidth-1:0];
+/*
+always @(posedge clk)
+    begin
+        if (o4_valid[0] == 1'b1)
+            holdData_5 <= x4_out;
+        else if(axi_rd_en)
+        begin
+            holdData_5 <= holdData_5>>`dataWidth;
+        end
+    end
+*/
+
+maxFinder #(.numInput(`numNeuronLayer4),.inputWidth(`dataWidth))
+    mFind(
+        .clk(clk),
+        .rst(wb_rst_i),
+        .i_data(x4_out),
+        .i_valid(o4_valid[0]),
+        .o_data(out),
+        .o_data_valid(out_valid)
+    );
+    
+// State machine for digit assignment
+always @(posedge clk)
+begin
+    if(wb_rst_i)
+    begin
+      io_out[3:0] <= 4'hF;
+    end
+    else 
+        if (io_out1)
+        begin
+            case(out)
+                16'h0: io_out[3:0] <= 4'h0;
+                16'h1: io_out[3:0] <= 4'h1;
+                16'h2: io_out[3:0] <= 4'h2;
+                16'h3: io_out[3:0] <= 4'h3;
+                16'h4: io_out[3:0] <= 4'h4;
+                16'h5: io_out[3:0] <= 4'h5;
+                16'h6: io_out[3:0] <= 4'h6;
+                16'h7: io_out[3:0] <= 4'h7;
+                16'h8: io_out[3:0] <= 4'h8;
+                16'h9: io_out[3:0] <= 4'h9;
+                default: io_out[3:0] <= 4'hF; // In case out is not in the range
+            endcase
+        end
+        else
+        begin
+            io_out[3:0] <= 4'h1; // Default value
+        end
+     end
+
+endmodule
+`default_nettype wire
